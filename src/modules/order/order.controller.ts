@@ -28,13 +28,13 @@ export class OrdersController {
     @User() reqUser: ReqUser,
     @Param("id") id: string,
     @Headers("if-match") version: string,
-    @Body() body: { totalCents: number }
+    @Body() body: { totalCents: number },
   ) {
     return this.ordersService.confirm(
       id,
       reqUser.id,
       Number(version),
-      body.totalCents
+      body.totalCents,
     );
   }
 
@@ -47,12 +47,12 @@ export class OrdersController {
   list(
     @User() reqUser: ReqUser,
     @Query("limit") limit = 20,
-    @Query("cursor") cursor?: string
+    @Query("cursor") cursor?: string,
   ) {
     return this.ordersService.list(
       reqUser.id,
       Math.min(limit, 100),
-      cursor ? JSON.parse(Buffer.from(cursor, "base64").toString()) : undefined
+      cursor ? JSON.parse(Buffer.from(cursor, "base64").toString()) : undefined,
     );
   }
 }

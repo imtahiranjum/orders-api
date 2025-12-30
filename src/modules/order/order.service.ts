@@ -18,14 +18,14 @@ export class OrdersService {
     private events: PulsarEventPublisher,
   ) {}
 
-  async createDraft(tenantId: string, idemKey: string) {
-    const redisKey = `${tenantId}:${idemKey}`;
+  async createDraft(userId: string, idemKey: string) {
+    const redisKey = `${userId}:${idemKey}`;
 
     const cached = await this.cacheService.get(redisKey);
     if (cached) return cached;
 
     const order = this.dataSource.manager.create(OrdersEntity, {
-      tenantId,
+      userId,
       status: OrderStatus.DRAFT,
     });
 
@@ -33,7 +33,7 @@ export class OrdersService {
 
     const response = {
       id: order.id,
-      tenantId,
+      userId,
       status: order.status,
       version: order.version,
       createdAt: order.createdAt,
@@ -47,7 +47,7 @@ export class OrdersService {
 
   async confirm(
     id: string,
-    tenantId: string,
+    userId: string,
     version: number,
     totalCents: number,
   ) {
@@ -59,9 +59,9 @@ export class OrdersService {
         totalCents,
         version: () => "version + 1",
       })
-      .where("id = :id AND tenantId = :tenantId AND version = :version", {
+      .where("id = :id AND userId = :userId AND version = :version", {
         id,
-        tenantId,
+        userId,
         version,
       })
       .execute();
@@ -70,12 +70,12 @@ export class OrdersService {
       throw new ConflictException("Stale version");
     }
 
-    await this.events.publish("orders.confirmed", { id, tenantId });
+    await this.events.publish("orders.confirmed", { id, userId });
   }
 
-  async close(id: string, tenantId: string) {
+  async close(id: string, userId: string) {
     await this.dataSource.transaction(async (em) => {
-      const order = await em.findOneBy(OrdersEntity, { id, tenantId });
+      const order = await em.findOneBy(OrdersEntity, { id, userId: userId });
 
       if (!order || order.status !== "confirmed") {
         throw new BadRequestException("Invalid order state");
@@ -88,10 +88,10 @@ export class OrdersService {
       await em.insert(OutboxEntity, {
         eventType: "orders.closed",
         orderId: order.id,
-        tenantId,
+        userId,
         payload: {
           orderId: order.id,
-          tenantId,
+          userId,
           totalCents: order.totalCents as number,
           closedAt: new Date().toISOString(),
         },
@@ -99,11 +99,11 @@ export class OrdersService {
     });
   }
 
-  async list(tenantId: string, limit: number, cursor?: any) {
+  async list(userId: string, limit: number, cursor?: any) {
     const qb = this.dataSource
       .getRepository(OrdersEntity)
       .createQueryBuilder("o")
-      .where("o.tenantId = :tenantId", { tenantId })
+      .where("o.userId = :userId", { userId })
       .orderBy("o.createdAt", "DESC")
       .addOrderBy("o.id", "DESC")
       .take(limit + 1);

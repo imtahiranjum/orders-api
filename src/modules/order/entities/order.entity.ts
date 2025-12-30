@@ -5,7 +5,7 @@ import { OrderStatus } from "../enums/order-status.enum";
 @Entity("orders")
 export class OrdersEntity extends CustomBaseEntity {
   @Column({ type: "text" })
-  tenantId: string;
+  userId: string;
 
   @Column({
     type: "enum",

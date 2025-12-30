@@ -59,7 +59,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       fs.appendFileSync(
         path.join(this.logDir, "errors.log"),
-        JSON.stringify(log) + "\n"
+        JSON.stringify(log) + "\n",
       );
 
       this.logger.error(log.message);
@@ -82,27 +82,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       message =
         typeof res === "string" ? res : ((res as any)?.message ?? message);
-    }
-
-    else if (exception instanceof QueryFailedError) {
+    } else if (exception instanceof QueryFailedError) {
       const code = (exception as any)?.driverError?.code;
       const mapped = this.dbErrorMap[code];
 
       status = mapped?.status ?? HttpStatus.BAD_REQUEST;
       message = mapped?.message ?? "Database error";
-    }
-
-    else if (exception instanceof EntityNotFoundError) {
+    } else if (exception instanceof EntityNotFoundError) {
       status = HttpStatus.NOT_FOUND;
       message = "Resource not found";
-    }
-
-    else if (exception instanceof TypeORMError) {
+    } else if (exception instanceof TypeORMError) {
       status = HttpStatus.BAD_REQUEST;
       message = "Database operation failed";
-    }
-
-    else {
+    } else {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
       message = "Internal server error";
     }

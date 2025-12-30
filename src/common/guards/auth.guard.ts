@@ -23,13 +23,13 @@ export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private configService: ConfigService,
-    private usersService: UsersService
+    private usersService: UsersService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.get<boolean>(
       "isPublic",
-      context.getHandler()
+      context.getHandler(),
     );
     if (isPublic) {
       return true;
@@ -44,7 +44,7 @@ export class AuthGuard implements CanActivate {
     try {
       const payload: any = verify(
         token,
-        this.configService.get<string>("JWT_SECRET")!
+        this.configService.get<string>("JWT_SECRET")!,
       );
 
       const user = await this.usersService.findOne(payload.id);

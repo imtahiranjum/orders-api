@@ -14,13 +14,13 @@ export class PulsarEventPublisher {
 
   async publish<T>(
     type: string,
-    payload: T & { tenantId: string },
+    payload: T & { userId: string },
   ): Promise<void> {
     const envelope: PulsarEventEnvelope<T> = {
       id: randomUUID(),
       type,
       source: "orders-service",
-      tenantId: payload.tenantId,
+      userId: payload.userId,
       time: new Date().toISOString(),
       schemaVersion: "1",
       traceId: getRequestId(),

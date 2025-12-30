@@ -10,7 +10,7 @@ export class OutboxEntity extends CustomBaseEntity {
   orderId: string;
 
   @Column()
-  tenantId: string;
+  userId: string;
 
   @Column({ type: "jsonb" })
   payload: Record<string, unknown>;

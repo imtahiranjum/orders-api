@@ -15,7 +15,6 @@ export class UsersController {
     return this.usersService.validateLogin(loginDto);
   }
 
-
   @Public()
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {

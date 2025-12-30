@@ -17,7 +17,7 @@ export class UsersService {
   private refreshTokenExpiry: StringValue;
   constructor(
     @InjectRepository(UserEntity)
-    private usersRepository: Repository<UserEntity>
+    private usersRepository: Repository<UserEntity>,
   ) {}
   create(createUserDto: CreateUserDto) {
     return this.usersRepository.save(createUserDto);
@@ -63,12 +63,12 @@ export class UsersService {
     const token = this.generateToken(
       user,
       this.secretKey,
-      this.accessTokenExpiry
+      this.accessTokenExpiry,
     );
     const refreshToken = this.generateToken(
       user,
       this.refreshSecretKey,
-      this.refreshTokenExpiry
+      this.refreshTokenExpiry,
     );
 
     user.lastLogin = new Date();
@@ -88,7 +88,7 @@ export class UsersService {
   private generateToken(
     user: Partial<UserEntity>,
     secretKey: string,
-    expiry: StringValue
+    expiry: StringValue,
   ) {
     const issuedAt = Math.floor(Date.now() / 1000);
 
@@ -101,7 +101,7 @@ export class UsersService {
       secretKey,
       {
         expiresIn: expiry,
-      }
+      },
     );
   }
 }
