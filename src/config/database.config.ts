@@ -14,7 +14,9 @@ export class DatabaseConfig implements TypeOrmOptionsFactory {
       username: this.configService.get("database.username"),
       password: this.configService.get("database.password"),
       database: this.configService.get("database.name"),
-      ssl: this.configService.get("database.ssl"),
+      ssl: this.configService.get("database.ssl")
+        ? { rejectUnauthorized: false }
+        : false,
       synchronize: this.configService.get("database.sync"),
       migrations: [__dirname + "/../database/migrations/*{.ts,.js}"],
       entities: [__dirname + "/../**/*.entity{.ts,.js}"],

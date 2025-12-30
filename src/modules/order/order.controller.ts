@@ -17,12 +17,12 @@ import { OrdersService } from './order.service';
 @UseGuards(TenantGuard)
 @Controller('orders')
 export class OrdersController {
-  constructor(private service: OrdersService) {}
+  constructor(private ordersService: OrdersService) {}
 
   @Post()
   create(@Tenant() tenantId: string, @Headers('idempotency-key') key: string) {
     if (!key) throw new BadRequestException('Missing Idempotency-Key');
-    return this.service.createDraft(tenantId, key);
+    return this.ordersService.createDraft(tenantId, key);
   }
 
   @Patch(':id/confirm')
@@ -32,12 +32,12 @@ export class OrdersController {
     @Headers('if-match') version: string,
     @Body() body: { totalCents: number },
   ) {
-    return this.service.confirm(id, tenantId, Number(version), body.totalCents);
+    return this.ordersService.confirm(id, tenantId, Number(version), body.totalCents);
   }
 
   @Post(':id/close')
   close(@Tenant() tenantId: string, @Param('id') id: string) {
-    return this.service.close(id, tenantId);
+    return this.ordersService.close(id, tenantId);
   }
 
   @Get()
@@ -46,7 +46,7 @@ export class OrdersController {
     @Query('limit') limit = 20,
     @Query('cursor') cursor?: string,
   ) {
-    return this.service.list(
+    return this.ordersService.list(
       tenantId,
       Math.min(limit, 100),
       cursor ? JSON.parse(Buffer.from(cursor, 'base64').toString()) : undefined,

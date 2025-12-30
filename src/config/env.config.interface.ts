@@ -21,6 +21,7 @@ export interface IDatabase {
   username: string;
   password: string;
   sync: boolean;
+  ssl: boolean;
 }
 
 export interface IRedis {

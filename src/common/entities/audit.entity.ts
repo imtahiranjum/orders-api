@@ -4,7 +4,7 @@ export abstract class Audit {
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column({ type: 'timestamptz' })
+  @Column({ type: 'timestamptz', nullable: true })
   updatedAt: Date;
 
   @AfterUpdate()

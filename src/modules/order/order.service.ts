@@ -59,7 +59,7 @@ export class OrdersService {
         totalCents,
         version: () => 'version + 1',
       })
-      .where('id = :id AND tenant_id = :tenantId AND version = :version', {
+      .where('id = :id AND tenantId = :tenantId AND version = :version', {
         id,
         tenantId,
         version,

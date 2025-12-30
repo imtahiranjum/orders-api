@@ -39,6 +39,7 @@ export const database = registerAs(
     username: process.env.DATABASE_USERNAME!,
     password: process.env.DATABASE_PASSWORD!,
     sync: process.env.DATABASE_SYNC === 'true',
+    ssl: process.env.DATABASE_SSL === 'true',
   }),
 );
 
