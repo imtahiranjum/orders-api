@@ -1,10 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { PulsarProducerService } from './events/pulsar/pulsar-producer.service';
-import { ORDERS } from './app.constants';
+import { Injectable } from "@nestjs/common";
+import { PulsarProducerService } from "./events/pulsar/pulsar-producer.service";
+import { ORDERS } from "./app.constants";
 
 @Injectable()
 export class AppService {
-
   constructor(private readonly pulsarProducerService: PulsarProducerService) {}
 
   async sendMessage(request: any) {
@@ -12,8 +11,8 @@ export class AppService {
       await this.pulsarProducerService.produce(ORDERS, request);
     }
   }
-  
+
   getHello(): string {
-    return 'Hello World!';
+    return "Hello World!";
   }
 }

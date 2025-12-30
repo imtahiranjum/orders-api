@@ -1,6 +1,6 @@
-import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { nextTick } from 'process';
-import { Client, Consumer, Message } from 'pulsar-client';
+import { Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
+import { nextTick } from "process";
+import { Client, Consumer, Message } from "pulsar-client";
 
 export abstract class PulsarConsumer<T>
   implements OnModuleInit, OnModuleDestroy
@@ -38,7 +38,7 @@ export abstract class PulsarConsumer<T>
           messages.map((message) => this.receive(message)),
         );
       } catch (err) {
-        this.logger.error('Error receiving batch.', err);
+        this.logger.error("Error receiving batch.", err);
       }
     }
   }
@@ -49,13 +49,13 @@ export abstract class PulsarConsumer<T>
       console.log(data, message.getMessageId().toString());
       this.handleMessage(data);
     } catch (err) {
-      this.logger.error('Error consuming.', err);
+      this.logger.error("Error consuming.", err);
     }
 
     try {
       await this.consumer.acknowledge(message);
     } catch (err) {
-      this.logger.error('Error acking.', err);
+      this.logger.error("Error acking.", err);
     }
   }
 

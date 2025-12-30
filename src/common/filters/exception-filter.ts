@@ -10,16 +10,16 @@ import {
   Logger,
   NotFoundException,
   UnauthorizedException,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
-import * as fs from 'fs';
-import * as path from 'path';
-import { EntityNotFoundError, QueryFailedError, TypeORMError } from 'typeorm';
+} from "@nestjs/common";
+import { Request, Response } from "express";
+import * as fs from "fs";
+import * as path from "path";
+import { EntityNotFoundError, QueryFailedError, TypeORMError } from "typeorm";
 
 @Catch()
 @Injectable()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logDir = path.join(__dirname, '../../../logs');
+  private readonly logDir = path.join(__dirname, "../../../logs");
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   constructor() {}
@@ -36,7 +36,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       const filePath = path.join(
         this.logDir,
-        isUnhandled ? 'unhandled-errors.log' : 'errors.log',
+        isUnhandled ? "unhandled-errors.log" : "errors.log",
       );
 
       const logEntry = {
@@ -48,10 +48,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         driverError: (exception as any)?.driverError || null,
       };
 
-      fs.appendFileSync(filePath, JSON.stringify(logEntry, null, 2) + '\n');
+      fs.appendFileSync(filePath, JSON.stringify(logEntry, null, 2) + "\n");
 
       this.logger.error(
-        isUnhandled ? 'Unhandled Error Logged' : 'Error Logged:',
+        isUnhandled ? "Unhandled Error Logged" : "Error Logged:",
         logEntry.message,
       );
 
@@ -61,18 +61,18 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         `Path: ${logEntry.path}`,
         `Method: ${logEntry.method}`,
         `Message: ${logEntry.message}`,
-        `Stack:\n${logEntry.stack || 'N/A'}`,
+        `Stack:\n${logEntry.stack || "N/A"}`,
         `Driver Error:\n${
           logEntry.driverError
             ? JSON.stringify(logEntry.driverError, null, 2)
-            : 'None'
+            : "None"
         }`,
         `\n`,
-      ].join('\n');
+      ].join("\n");
 
       console.error(formatted);
     } catch (e) {
-      console.error('Failed to write error log:', e);
+      console.error("Failed to write error log:", e);
     }
   }
 
@@ -84,57 +84,57 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
 
     // Default end-user response (translated)
-    let userMessage = 'Internal Server Error';
+    let userMessage = "Internal Server Error";
 
     // Developer/system message (untranslated)
-    let devMessage: string | object = exception?.message || 'Internal Error';
+    let devMessage: string | object = exception?.message || "Internal Error";
 
     // --- Handle known user-facing errors ---
     if (exception instanceof QueryFailedError) {
       const driverError: any = (exception as any).driverError;
       switch (driverError?.code) {
-        case '23505': // Unique violation
+        case "23505": // Unique violation
           status = HttpStatus.CONFLICT;
           devMessage = exception.message;
-          userMessage = 'Internal Server Error';
+          userMessage = "Internal Server Error";
           break;
-        case '23503': // Foreign key violation
+        case "23503": // Foreign key violation
           status = HttpStatus.BAD_REQUEST;
           devMessage = exception.message;
-          userMessage = 'Internal Server Error';
+          userMessage = "Internal Server Error";
           break;
-        case '23502': // Missing required field
+        case "23502": // Missing required field
           status = HttpStatus.BAD_REQUEST;
           devMessage = exception.message;
-          userMessage = 'Internal Server Error';
+          userMessage = "Internal Server Error";
           break;
-        case '22P02': // Invalid input syntax
+        case "22P02": // Invalid input syntax
           status = HttpStatus.BAD_REQUEST;
           devMessage = exception.message;
-          userMessage = 'Internal Server Error';
+          userMessage = "Internal Server Error";
           break;
-        case '22003': // Out of range
+        case "22003": // Out of range
           status = HttpStatus.BAD_REQUEST;
           devMessage = exception.message;
-          userMessage = 'Internal Server Error';
+          userMessage = "Internal Server Error";
           break;
-        case '23514': // Check constraint
+        case "23514": // Check constraint
           status = HttpStatus.BAD_REQUEST;
           devMessage = exception.message;
-          userMessage = 'Internal Server Error';
+          userMessage = "Internal Server Error";
           break;
         default:
           status = HttpStatus.BAD_REQUEST;
-          userMessage = 'Internal Server Error';
+          userMessage = "Internal Server Error";
       }
     } else if (exception instanceof EntityNotFoundError) {
       status = HttpStatus.NOT_FOUND;
       devMessage = exception.message;
-      userMessage = 'Not found';
+      userMessage = "Not found";
     } else if (exception instanceof TypeORMError) {
       status = HttpStatus.BAD_REQUEST;
       devMessage = exception.message;
-      userMessage = 'Internal Server Error';
+      userMessage = "Internal Server Error";
     } else if (
       exception instanceof BadRequestException ||
       exception instanceof UnauthorizedException ||
@@ -144,10 +144,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     ) {
       status = exception.getStatus();
       const res = exception.getResponse();
-      if (typeof res === 'string') {
+      if (typeof res === "string") {
         userMessage = `errors.${res}`;
       } else {
-        userMessage = (res as any)?.message || 'errors.general';
+        userMessage = (res as any)?.message || "errors.general";
       }
     } else {
       this.writeErrorLog(exception, request, true);

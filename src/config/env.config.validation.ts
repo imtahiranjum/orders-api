@@ -1,13 +1,13 @@
-import * as Joi from 'joi';
+import * as Joi from "joi";
 
 export default Joi.object({
   // ────────────────────────────────────────────────
   // Server
   NODE_ENV: Joi.string()
-    .valid('development', 'production', 'stage', 'local')
+    .valid("development", "production", "stage", "local")
     .required(),
   PORT: Joi.number().default(8000),
-  ALLOWED_ORIGINS: Joi.string().allow(''),
+  ALLOWED_ORIGINS: Joi.string().allow(""),
 
   // ────────────────────────────────────────────────
   // Auth

@@ -4,7 +4,7 @@ export interface PulsarEventEnvelope<T = any> {
   source: string;
   tenantId: string;
   time: string;
-  schemaVersion: '1';
+  schemaVersion: "1";
   traceId?: string;
   data: T;
 }

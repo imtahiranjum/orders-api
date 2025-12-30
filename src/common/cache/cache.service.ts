@@ -1,12 +1,27 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { type Cache } from 'cache-manager';
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { type Cache } from "cache-manager";
 
 @Injectable()
 export class CacheService {
   private readonly logger = new Logger(CacheService.name);
 
   constructor(@Inject(CACHE_MANAGER) private readonly cache: Cache) {}
+
+  async ping(): Promise<string> {
+    try {
+      await this.cache.set("ping", "pong", 5);
+      const value = await this.cache.get<string>("ping");
+      if (value === "pong") {
+        return "PONG";
+      } else {
+        throw new Error("Cache ping failed");
+      }
+    } catch (err) {
+      this.logger.error("Cache ping failed", err.stack);
+      throw err;
+    }
+  }
 
   async get<T>(key: string): Promise<T | undefined> {
     try {

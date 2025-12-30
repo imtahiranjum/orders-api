@@ -2,13 +2,13 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
-} from '@nestjs/common';
-import { CacheService } from 'src/common/cache/cache.service';
-import { PulsarEventPublisher } from 'src/events/pulsar/pulsar.publisher';
-import { DataSource } from 'typeorm';
-import { OrdersEntity } from './entities/order.entity';
-import { Outbox } from './entities/outbox.entity';
-import { OrderStatus } from './enums/order-status.enum';
+} from "@nestjs/common";
+import { CacheService } from "src/common/cache/cache.service";
+import { PulsarEventPublisher } from "src/events/pulsar/pulsar.publisher";
+import { DataSource } from "typeorm";
+import { OrdersEntity } from "./entities/order.entity";
+import { OutboxEntity } from "./entities/outbox.entity";
+import { OrderStatus } from "./enums/order-status.enum";
 
 @Injectable()
 export class OrdersService {
@@ -39,7 +39,7 @@ export class OrdersService {
       createdAt: order.createdAt,
     };
 
-    await this.events.publish('orders.created', response);
+    await this.events.publish("orders.created", response);
     await this.cacheService.set(redisKey, response);
 
     return response;
@@ -57,9 +57,9 @@ export class OrdersService {
       .set({
         status: OrderStatus.CONFIRMED,
         totalCents,
-        version: () => 'version + 1',
+        version: () => "version + 1",
       })
-      .where('id = :id AND tenantId = :tenantId AND version = :version', {
+      .where("id = :id AND tenantId = :tenantId AND version = :version", {
         id,
         tenantId,
         version,
@@ -67,26 +67,26 @@ export class OrdersService {
       .execute();
 
     if (!result.affected) {
-      throw new ConflictException('Stale version');
+      throw new ConflictException("Stale version");
     }
 
-    await this.events.publish('orders.confirmed', { id, tenantId });
+    await this.events.publish("orders.confirmed", { id, tenantId });
   }
 
   async close(id: string, tenantId: string) {
     await this.dataSource.transaction(async (em) => {
       const order = await em.findOneBy(OrdersEntity, { id, tenantId });
 
-      if (!order || order.status !== 'confirmed') {
-        throw new BadRequestException('Invalid order state');
+      if (!order || order.status !== "confirmed") {
+        throw new BadRequestException("Invalid order state");
       }
 
       order.status = OrderStatus.CLOSED;
       order.version += 1;
       await em.save(order);
 
-      await em.insert(Outbox, {
-        eventType: 'orders.closed',
+      await em.insert(OutboxEntity, {
+        eventType: "orders.closed",
         orderId: order.id,
         tenantId,
         payload: {
@@ -102,14 +102,14 @@ export class OrdersService {
   async list(tenantId: string, limit: number, cursor?: any) {
     const qb = this.dataSource
       .getRepository(OrdersEntity)
-      .createQueryBuilder('o')
-      .where('o.tenantId = :tenantId', { tenantId })
-      .orderBy('o.createdAt', 'DESC')
-      .addOrderBy('o.id', 'DESC')
+      .createQueryBuilder("o")
+      .where("o.tenantId = :tenantId", { tenantId })
+      .orderBy("o.createdAt", "DESC")
+      .addOrderBy("o.id", "DESC")
       .take(limit + 1);
 
     if (cursor) {
-      qb.andWhere('(o.createdAt, o.id) < (:createdAt, :id)', cursor);
+      qb.andWhere("(o.createdAt, o.id) < (:createdAt, :id)", cursor);
     }
 
     const rows = await qb.getMany();
@@ -124,7 +124,7 @@ export class OrdersService {
               createdAt: items[items.length - 1].createdAt,
               id: items[items.length - 1].id,
             }),
-          ).toString('base64')
+          ).toString("base64")
         : null,
     };
   }

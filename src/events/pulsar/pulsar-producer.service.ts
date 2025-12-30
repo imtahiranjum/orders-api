@@ -1,6 +1,6 @@
-import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
-import { PULSAR_CLIENT } from './constants/pulsar.constant';
-import { Client, Producer } from 'pulsar-client';
+import { Inject, Injectable, OnModuleDestroy } from "@nestjs/common";
+import { PULSAR_CLIENT } from "./constants/pulsar.constant";
+import { Client, Producer } from "pulsar-client";
 
 @Injectable()
 export class PulsarProducerService implements OnModuleDestroy {

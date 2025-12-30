@@ -1,10 +1,10 @@
-import { AfterSoftRemove, AfterUpdate, Column } from 'typeorm';
+import { AfterSoftRemove, AfterUpdate, Column } from "typeorm";
 
 export abstract class Audit {
-  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: "timestamptz", default: () => "CURRENT_TIMESTAMP" })
   createdAt: Date;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: "timestamptz", nullable: true })
   updatedAt: Date;
 
   @AfterUpdate()

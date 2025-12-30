@@ -1,10 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { CustomBaseEntity } from "src/common/entities/base.entity";
+import { Column, Entity } from "typeorm";
 
-@Entity('outbox')
-export class Outbox {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
-
+@Entity("outbox")
+export class OutboxEntity extends CustomBaseEntity {
   @Column()
   eventType: string;
 
@@ -14,7 +12,7 @@ export class Outbox {
   @Column()
   tenantId: string;
 
-  @Column({ type: 'jsonb' })
+  @Column({ type: "jsonb" })
   payload: Record<string, unknown>;
 
   @Column({ nullable: true })

@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from "@nestjs/common";
 
 @Injectable()
 export class PulsarService {
-  private readonly logger = new Logger('Pulsar');
+  private readonly logger = new Logger("Pulsar");
 
   async publish(topic: string, message: any): Promise<void> {
     this.logger.log(

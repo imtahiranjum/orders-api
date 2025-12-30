@@ -1,24 +1,24 @@
-import { registerAs } from '@nestjs/config';
+import { registerAs } from "@nestjs/config";
 import {
   IAuthentication,
   IDatabase,
   IRedis,
   IServer,
-} from './env.config.interface';
+} from "./env.config.interface";
 
 export const server = registerAs(
-  'server',
+  "server",
   (): IServer => ({
     port: parseInt(process.env.PORT!),
     env: process.env.NODE_ENV!,
     allowedClients: process.env
-      .ALLOWED_ORIGINS!?.split(',')
+      .ALLOWED_ORIGINS!?.split(",")
       .map((val: string) => val.trim()),
   }),
 );
 
 export const authentication = registerAs(
-  'authentication',
+  "authentication",
   (): IAuthentication => ({
     resetPasswordRoute: process.env.RESET_PASSWORD_ROUTE!,
     jwtSecret: process.env.JWT_SECRET!,
@@ -31,20 +31,20 @@ export const authentication = registerAs(
 );
 
 export const database = registerAs(
-  'database',
+  "database",
   (): IDatabase => ({
     host: process.env.DATABASE_HOST!,
     port: parseInt(process.env.DATABASE_PORT!),
-    name: process.env.DATABASE!,
+    name: process.env.DATABASE_NAME!,
     username: process.env.DATABASE_USERNAME!,
     password: process.env.DATABASE_PASSWORD!,
-    sync: process.env.DATABASE_SYNC === 'true',
-    ssl: process.env.DATABASE_SSL === 'true',
+    sync: process.env.DATABASE_SYNC === "true",
+    ssl: process.env.DATABASE_SSL === "true",
   }),
 );
 
 export const redis = registerAs(
-  'redis',
+  "redis",
   (): IRedis => ({
     host: process.env.REDIS_HOST!,
     port: parseInt(process.env.REDIS_PORT!),

@@ -9,12 +9,12 @@ import { PulsarService } from "./pulsar.service";
 export class PulsarEventPublisher {
   constructor(
     private readonly client: PulsarService,
-    private readonly producer: PulsarProducerService
+    private readonly producer: PulsarProducerService,
   ) {}
 
   async publish<T>(
     type: string,
-    payload: T & { tenantId: string }
+    payload: T & { tenantId: string },
   ): Promise<void> {
     const envelope: PulsarEventEnvelope<T> = {
       id: randomUUID(),
