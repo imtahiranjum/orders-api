@@ -1,15 +1,11 @@
 import {
   ArgumentsHost,
-  BadRequestException,
   Catch,
   ExceptionFilter,
-  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
   Logger,
-  NotFoundException,
-  UnauthorizedException,
 } from "@nestjs/common";
 import { Request, Response } from "express";
 import * as fs from "fs";
@@ -19,147 +15,105 @@ import { EntityNotFoundError, QueryFailedError, TypeORMError } from "typeorm";
 @Catch()
 @Injectable()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logDir = path.join(__dirname, "../../../logs");
   private readonly logger = new Logger(GlobalExceptionFilter.name);
+  private readonly logDir = path.join(process.cwd(), "logs");
 
-  constructor() {}
+  private readonly dbErrorMap: Record<
+    string,
+    { status: HttpStatus; message: string }
+  > = {
+    "23505": {
+      status: HttpStatus.CONFLICT,
+      message: "Resource already exists",
+    },
+    "23503": { status: HttpStatus.BAD_REQUEST, message: "Invalid reference" },
+    "23502": {
+      status: HttpStatus.BAD_REQUEST,
+      message: "Missing required field",
+    },
+    "22P02": {
+      status: HttpStatus.BAD_REQUEST,
+      message: "Invalid input format",
+    },
+    "22003": { status: HttpStatus.BAD_REQUEST, message: "Value out of range" },
+    "23514": {
+      status: HttpStatus.BAD_REQUEST,
+      message: "Constraint violation",
+    },
+  };
 
-  private writeErrorLog(
-    exception: any,
-    request: Request,
-    isUnhandled: boolean = false,
-  ) {
+  private logError(exception: unknown, request: Request) {
     try {
       if (!fs.existsSync(this.logDir)) {
         fs.mkdirSync(this.logDir, { recursive: true });
       }
 
-      const filePath = path.join(
-        this.logDir,
-        isUnhandled ? "unhandled-errors.log" : "errors.log",
-      );
-
-      const logEntry = {
+      const log = {
         timestamp: new Date().toISOString(),
-        path: request.url,
         method: request.method,
-        message: exception?.message,
-        stack: exception?.stack,
-        driverError: (exception as any)?.driverError || null,
+        path: request.url,
+        message: (exception as any)?.message,
+        stack: (exception as any)?.stack,
+        driverError: (exception as any)?.driverError ?? null,
       };
 
-      fs.appendFileSync(filePath, JSON.stringify(logEntry, null, 2) + "\n");
-
-      this.logger.error(
-        isUnhandled ? "Unhandled Error Logged" : "Error Logged:",
-        logEntry.message,
+      fs.appendFileSync(
+        path.join(this.logDir, "errors.log"),
+        JSON.stringify(log) + "\n"
       );
 
-      const formatted = [
-        `\n`,
-        `Timestamp: ${logEntry.timestamp}`,
-        `Path: ${logEntry.path}`,
-        `Method: ${logEntry.method}`,
-        `Message: ${logEntry.message}`,
-        `Stack:\n${logEntry.stack || "N/A"}`,
-        `Driver Error:\n${
-          logEntry.driverError
-            ? JSON.stringify(logEntry.driverError, null, 2)
-            : "None"
-        }`,
-        `\n`,
-      ].join("\n");
-
-      console.error(formatted);
-    } catch (e) {
-      console.error("Failed to write error log:", e);
+      this.logger.error(log.message);
+    } catch (err) {
+      console.error("Failed to write error log", err);
     }
   }
 
-  async catch(exception: any, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = "Internal server error";
 
-    // Default end-user response (translated)
-    let userMessage = "Internal Server Error";
-
-    // Developer/system message (untranslated)
-    let devMessage: string | object = exception?.message || "Internal Error";
-
-    // --- Handle known user-facing errors ---
-    if (exception instanceof QueryFailedError) {
-      const driverError: any = (exception as any).driverError;
-      switch (driverError?.code) {
-        case "23505": // Unique violation
-          status = HttpStatus.CONFLICT;
-          devMessage = exception.message;
-          userMessage = "Internal Server Error";
-          break;
-        case "23503": // Foreign key violation
-          status = HttpStatus.BAD_REQUEST;
-          devMessage = exception.message;
-          userMessage = "Internal Server Error";
-          break;
-        case "23502": // Missing required field
-          status = HttpStatus.BAD_REQUEST;
-          devMessage = exception.message;
-          userMessage = "Internal Server Error";
-          break;
-        case "22P02": // Invalid input syntax
-          status = HttpStatus.BAD_REQUEST;
-          devMessage = exception.message;
-          userMessage = "Internal Server Error";
-          break;
-        case "22003": // Out of range
-          status = HttpStatus.BAD_REQUEST;
-          devMessage = exception.message;
-          userMessage = "Internal Server Error";
-          break;
-        case "23514": // Check constraint
-          status = HttpStatus.BAD_REQUEST;
-          devMessage = exception.message;
-          userMessage = "Internal Server Error";
-          break;
-        default:
-          status = HttpStatus.BAD_REQUEST;
-          userMessage = "Internal Server Error";
-      }
-    } else if (exception instanceof EntityNotFoundError) {
-      status = HttpStatus.NOT_FOUND;
-      devMessage = exception.message;
-      userMessage = "Not found";
-    } else if (exception instanceof TypeORMError) {
-      status = HttpStatus.BAD_REQUEST;
-      devMessage = exception.message;
-      userMessage = "Internal Server Error";
-    } else if (
-      exception instanceof BadRequestException ||
-      exception instanceof UnauthorizedException ||
-      exception instanceof ForbiddenException ||
-      exception instanceof NotFoundException ||
-      exception instanceof HttpException
-    ) {
+    if (exception instanceof HttpException) {
       status = exception.getStatus();
       const res = exception.getResponse();
-      if (typeof res === "string") {
-        userMessage = `errors.${res}`;
-      } else {
-        userMessage = (res as any)?.message || "errors.general";
-      }
-    } else {
-      this.writeErrorLog(exception, request, true);
+
+      message =
+        typeof res === "string" ? res : ((res as any)?.message ?? message);
     }
 
-    this.writeErrorLog(exception, request, false);
+    else if (exception instanceof QueryFailedError) {
+      const code = (exception as any)?.driverError?.code;
+      const mapped = this.dbErrorMap[code];
+
+      status = mapped?.status ?? HttpStatus.BAD_REQUEST;
+      message = mapped?.message ?? "Database error";
+    }
+
+    else if (exception instanceof EntityNotFoundError) {
+      status = HttpStatus.NOT_FOUND;
+      message = "Resource not found";
+    }
+
+    else if (exception instanceof TypeORMError) {
+      status = HttpStatus.BAD_REQUEST;
+      message = "Database operation failed";
+    }
+
+    else {
+      status = HttpStatus.INTERNAL_SERVER_ERROR;
+      message = "Internal server error";
+    }
+
+    this.logError(exception, request);
 
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: userMessage,
+      message,
     });
   }
 }
